@@ -6,7 +6,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=PT+Serif&display=swap" rel="stylesheet">
+    <script src="boids/simulation/application.js"></script>
+    <script src="boids/simulation/canvas_init.js"></script>
+    <script src="boids/simulation/vector.js"></script>
+    <script src="boids/simulation/boid.js"></script>
+    <script src="boids/simulation/simulation.js"></script>
+    <script src="boids/simulation/boids.js"></script>
+    <script src="boids/simulation/obstacle.js"></script>
+
     <title>Eric Ciarla</title>
+
     <style>
         body {
             display: flex;
@@ -16,16 +25,27 @@
             margin: 0;
             padding: 0;
             font-family: 'PT Serif', serif;
-            color: #582f0e;
+            color: rgb(88, 47, 14);
             background: #faf0e6;
             font-size: 18px;
             line-height: 1.6;
             text-align: center;
         }
 
+        #simulation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
         .content {
             max-width: 800px;
             padding: 20px;
+            position: relative;
+            z-index: 1;
         }
 
         h1,
@@ -37,17 +57,24 @@
         }
 
         a {
-            color: #414833;
+            color: rgb(65, 72, 51);
+            position: relative;
+            z-index: 2;
         }
     </style>
+
 </head>
 
+
+
 <body>
+    <canvas id="simulation"></canvas>
     <div class="content">
-        <span style="font-size: 30px; letter-spacing: -1px;">Eric Ciarla</span><br>Co-Founder @ <a
-            href="https://www.mendable.ai/" style="color:#582f0e; text-decoration: none;"
+        <span style="font-size: 30px; letter-spacing: -1px;">Eric Ciarla</span><br>
+        Co-Founder @ <a href="https://www.mendable.ai/" style="color:#582f0e; text-decoration: none;"
             target="_blank">Mendable.ai</a>
-        <br><a href="https://twitter.com/ericciarla" target="_blank">Twitter</a> |
+        <br>
+        <a href="https://twitter.com/ericciarla" target="_blank">Twitter</a> |
         <a href="https://www.linkedin.com/in/eric-ciarla" target="_blank">LinkedIn</a> |
         <a href="https://github.com/ericciarla" target="_blank">GitHub</a>
     </div>
