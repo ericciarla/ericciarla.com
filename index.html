@@ -61,6 +61,13 @@
             position: relative;
             z-index: 2;
         }
+
+        /* Hide the simulation canvas on screens that are 768px wide or smaller */
+        @media (max-width: 768px) {
+            #simulation {
+                display: none;
+            }
+        }
     </style>
 
 </head>
