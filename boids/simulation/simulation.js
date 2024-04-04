@@ -9,7 +9,7 @@ function Simulation(name) {
 	this.ctx = canvas.getContext('2d');
 	this.canvasHeight = canvas$.height();
 	this.canvasWidth = canvas$.width();
-	this.separationMultiplier = 2;
+	this.separationMultiplier = 3;
 	this.cohesionMultiplier = 1;
 	this.alignmentMultiplier = 1;
 	this.avoid_mouse = false;
@@ -17,19 +17,29 @@ function Simulation(name) {
 
 Simulation.prototype = {
 	initialize: function (use_obstacle, avoid_mouse) {
-		this.obstacles = [];
-		if (use_obstacle) {
-			this.addObstacle(new Obstacle(this.canvasWidth / 2, this.canvasHeight / 2, 40, 2, this))
-		}
-		this.avoid_mouse = avoid_mouse
-		this.boids = [];
-		var start_x = Math.floor(Math.random() * this.canvasWidth);
-		var start_y = Math.floor(Math.random() * this.canvasHeight);
-		for (var i = 0; i < NUM_BOIDS; i++) {
-			var boid = new Boid(start_y, start_x, this);
+        this.obstacles = [];
+        if (use_obstacle) {
+            this.addObstacle(new Obstacle(this.canvasWidth / 2, this.canvasHeight / 2, 40, 2, this));
+        }
+        this.avoid_mouse = avoid_mouse;
+        this.boids = [];
+        var leaderSet = false; // Flag to track if the leader has been set
+        for (var i = 0; i < NUM_BOIDS; i++) {
+            var start_x = Math.floor(Math.random() * this.canvasWidth);
+            var start_y = Math.floor(Math.random() * this.canvasHeight);
+            
+            if (!leaderSet) {
+				var boid = new Boid(start_y, start_x, this, true);
+                leaderSet = true; // Set the flag to indicate that the leader has been set
+				console.log('leader set');
+            } else {
+				var boid = new Boid(start_y, start_x, this);
+				console.log('not leader');
+			}
 			this.addBoid(boid);
-		}
-	},
+            
+        }
+    },
 	addBoid: function (boid) {
 		this.boids.push(boid);
 	},

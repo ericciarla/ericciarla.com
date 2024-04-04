@@ -1,4 +1,4 @@
-var MAX_SPEED = 6;
+var MAX_SPEED = 5;
 var MAX_FORCE = 0.1;
 var DESIRED_SEPARATION = 40;
 var MOUSE_DESIRED_SEPARATION = 200;
@@ -12,49 +12,54 @@ var avoidanceMultiplier = 2;
 
 
 
-function Boid(x, y, simulation) {
+function Boid(x, y, simulation, leader = false) {
 	var randomAngle = Math.random() * 2 * Math.PI;
 	this.velocity = new Vector(Math.cos(randomAngle), Math.sin(randomAngle));
 	this.position = new Vector(x, y);
 	this.acceleration = new Vector(0, 0);
 	this.simulation = simulation;
-	this.render_size = render_size
-	this.death_throws = death_throws
+	this.render_size = render_size;
+	this.death_throws = death_throws;
 	this.sabateur = false;
+	this.leader = leader;
 }
 
 Boid.prototype = {
 
 	render: function () {
-		var directionVector = this.velocity.normalize().multiplyBy(this.render_size);
-		var inverseVector1 = new Vector(- directionVector.y, directionVector.x);
-		var inverseVector2 = new Vector(directionVector.y, - directionVector.x);
-		inverseVector1 = inverseVector1.divideBy(3);
-		inverseVector2 = inverseVector2.divideBy(3);
+        var sizeMultiplier = this.leader ? 1.5 : .8; // Increase the size for the leader
+        var directionVector = this.velocity.normalize().multiplyBy(this.render_size * sizeMultiplier);
+        var inverseVector1 = new Vector(- directionVector.y, directionVector.x);
+        var inverseVector2 = new Vector(directionVector.y, - directionVector.x);
+        inverseVector1 = inverseVector1.divideBy(3);
+        inverseVector2 = inverseVector2.divideBy(3);
 
-		this.simulation.ctx.beginPath();
-		this.simulation.ctx.moveTo(this.position.x, this.position.y);
-		this.simulation.ctx.lineTo(this.position.x + inverseVector1.x, this.position.y + inverseVector1.y);
-		this.simulation.ctx.lineTo(this.position.x + directionVector.x, this.position.y + directionVector.y);
-		this.simulation.ctx.lineTo(this.position.x + inverseVector2.x, this.position.y + inverseVector2.y);
-		this.simulation.ctx.lineTo(this.position.x, this.position.y);
-		this.simulation.ctx.strokeStyle = 'rgba(black 1)';
-		this.simulation.ctx.stroke();
-		if (this.sabateur) {
-			this.simulation.ctx.fillStyle = 'rgba(22, 236, 22, 0.8)';
-		} else if (this.death_throws == 0) {
-			this.simulation.ctx.fillStyle = 'rgba(black,0.8)';
-		} else {
-			this.simulation.ctx.fillStyle = 'rgba(22, 72, 236, 0.8)';
-		}
-		this.simulation.ctx.fill();
-	},
+        this.simulation.ctx.beginPath();
+        this.simulation.ctx.moveTo(this.position.x, this.position.y);
+        this.simulation.ctx.lineTo(this.position.x + inverseVector1.x, this.position.y + inverseVector1.y);
+        this.simulation.ctx.lineTo(this.position.x + directionVector.x, this.position.y + directionVector.y);
+        this.simulation.ctx.lineTo(this.position.x + inverseVector2.x, this.position.y + inverseVector2.y);
+        this.simulation.ctx.lineTo(this.position.x, this.position.y);
+        this.simulation.ctx.strokeStyle = 'rgba(88, 47, 14, .2)';
+        this.simulation.ctx.stroke();
+        if (this.leader) {
+            this.simulation.ctx.fillStyle = 'rgba(65, 72, 51, 1)'; // Green color for the leader
+        } else {
+            this.simulation.ctx.fillStyle = 'rgba(88, 47, 14, .2)'; // Brown color for non-leaders
+        }
+        this.simulation.ctx.fill();
+    },
 
 	//
-	// Rule 1: Boids try to fly towards the centre of mass of neighbouring boids.
+	// Rule 1: Boids try to fly towards the centre of mass of neighbouring boids, with non-leaders very attracted to leaders.
 	getCohesionVector: function (boids) {
 		var totalPosition = new Vector(0, 0);
+		var leaderPosition = new Vector(0, 0);
 		var neighborCount = 0;
+		var leaderCount = 0;
+		var nonLeaderCohesionIntensity = this.leader ? 0.2 : 1.5; // Leaders are less likely to fly towards other boids, non-leaders are less attracted to non-leaders
+		var leaderCohesionIntensity = this.leader ? 0.2 : 2.5; // Non-leaders are significantly more attracted to leaders
+
 		for (var bi in boids) {
 			var boid = boids[bi];
 			if (this == boid) {
@@ -62,29 +67,37 @@ Boid.prototype = {
 			}
 
 			var distance = this.position.getDistance(boid.position) + EPSILON;
-			if (distance <= NEIGHBOR_DISTANCE) {
+			if (boid.leader) {
+				if (distance <= NEIGHBOR_DISTANCE * 2) { // Non-leaders are very attracted to leaders
+					leaderPosition = leaderPosition.add(boid.position);
+					leaderCount++;
+				}
+			} else if (distance <= NEIGHBOR_DISTANCE * nonLeaderCohesionIntensity) { // Adjusting distance for non-leaders to other non-leaders
 				totalPosition = totalPosition.add(boid.position);
 				neighborCount++;
 			}
 		}
 
-		if (neighborCount > 0) {
+		if (leaderCount > 0) {
+			var averageLeaderPosition = leaderPosition.divideBy(leaderCount);
+			return this.seek(averageLeaderPosition, leaderCohesionIntensity); // Non-leaders are very attracted to the average position of leaders
+		} else if (neighborCount > 0) {
 			var averagePosition = totalPosition.divideBy(neighborCount);
-			return this.seek(averagePosition);
+			return this.seek(averagePosition, nonLeaderCohesionIntensity); // Adjusting seek behavior for non-leaders to other non-leaders
 		} else {
 			return new Vector(0, 0);
 		}
 	},
 
-	seek: function (targetPosition) {
+	seek: function (targetPosition, intensity = 1) {
 		var desiredVector = targetPosition.subtract(this.position);
 
-		// Scale to the maximum speed
-		desiredVector.iSetMagnitude(MAX_SPEED);
+		// Scale to the maximum speed, adjusted by intensity for leaders and attraction to leaders
+		desiredVector.iSetMagnitude(MAX_SPEED * intensity);
 
 		// Steering = Desired minus Velocity
 		var steeringVector = desiredVector.subtract(this.velocity);
-		steeringVector = steeringVector.limit(MAX_FORCE);
+		steeringVector = steeringVector.limit(MAX_FORCE * intensity); // Adjusting force for leaders and attraction to leaders
 
 		return steeringVector;
 	},
@@ -167,22 +180,23 @@ Boid.prototype = {
 			if (this == boid) {
 				continue;
 			}
-
+	
 			var distance = this.position.getDistance(boid.position) + EPSILON;
 			if (distance > 0 && distance < NEIGHBOR_DISTANCE) {
+				
 				perceivedFlockVelocity.iAdd(boid.velocity);
+				
 				neighborCount++;
 			}
 		}
 
 		if (neighborCount > 0) {
-
 			var averageVelocity = perceivedFlockVelocity.divideBy(neighborCount);
 			averageVelocity.iSetMagnitude(MAX_SPEED);
-
+	
 			var steeringVector = averageVelocity.subtract(this.velocity);
 			steeringVector.iLimit(MAX_FORCE);
-
+		
 			return steeringVector;
 		} else {
 			return new Vector(0, 0);
