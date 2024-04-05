@@ -15,7 +15,7 @@
     <script src="boids/simulation/obstacle.js"></script>
 
     <title>Eric Ciarla</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
             display: flex;
@@ -28,6 +28,7 @@
             color: rgb(88, 47, 14);
             background: #faf0e6;
             font-size: 18px;
+            /* Default font size */
             line-height: 1.6;
             text-align: center;
         }
@@ -62,10 +63,21 @@
             z-index: 2;
         }
 
-        /* Hide the simulation canvas on screens that are 768px wide or smaller */
+        /* Adjustments for mobile devices */
         @media (max-width: 768px) {
             #simulation {
                 display: none;
+                /* Ensure this is working correctly */
+            }
+
+            body {
+                font-size: 20px;
+                /* Increase font size for better readability on mobile */
+            }
+
+            .content {
+                padding: 10px;
+                /* Adjust padding as needed for smaller screens */
             }
         }
     </style>

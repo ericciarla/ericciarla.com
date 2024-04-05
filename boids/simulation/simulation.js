@@ -24,9 +24,11 @@ Simulation.prototype = {
         this.avoid_mouse = avoid_mouse;
         this.boids = [];
         var leaderSet = false; // Flag to track if the leader has been set
+		// update mouse position
+        var mouse_position = new Vector(0, 0);
         for (var i = 0; i < NUM_BOIDS; i++) {
-            var start_x = Math.floor(Math.random() * this.canvasWidth);
-            var start_y = Math.floor(Math.random() * this.canvasHeight);
+            var start_x = mouse_position.x;
+            var start_y = mouse_position.y;
             
             if (!leaderSet) {
 				var boid = new Boid(start_y, start_x, this, true);
